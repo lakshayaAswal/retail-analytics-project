@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Retail Analytics Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f4f6fa;--card:#fff;--ink:#16202e;--mute:#5d6b7e;--line:#e3e8ef;--acc:#2f5bea;--acc2:#0f9d8a;--fade:#d5dbe5;--warn:#d9822b}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f141b;--card:#171e28;--ink:#e8edf4;--mute:#9aa6b6;--line:#263040;--acc:#6d8cff;--acc2:#3cc3ad;--fade:#3a4556;--warn:#e9a050}}
+:root[data-theme="dark"]{--bg:#0f141b;--card:#171e28;--ink:#e8edf4;--mute:#9aa6b6;--line:#263040;--acc:#6d8cff;--acc2:#3cc3ad;--fade:#3a4556;--warn:#e9a050}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px 48px}
+header{padding:32px 0 20px}
+header h1{margin:0;font-size:28px;letter-spacing:-.3px}
+.period{display:inline-block;margin-top:6px;font-size:13px;color:var(--acc);font-weight:600}
+header p{margin:6px 0 0;color:var(--mute)}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.bar label{font-size:12px;color:var(--mute);display:flex;flex-direction:column;gap:2px}
+select,button{font:inherit;font-size:14px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+button{cursor:pointer;align-self:flex-end}button:hover{border-color:var(--acc)}
+nav{margin-left:auto;display:flex;gap:14px;flex-wrap:wrap;font-size:13px}nav a{color:var(--mute);text-decoration:none}nav a:hover{color:var(--acc)}
+h2{font-size:18px;margin:36px 0 14px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-top:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}
+.kpi .l{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.5px}
+.kpi .v{font-size:28px;font-weight:700;margin:4px 0 2px}.kpi .s{font-size:12px;color:var(--mute)}
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.sum .card{border-left:4px solid var(--acc)}.sum .card p{margin:0}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.wide{grid-column:1/-1}
+@media(max-width:860px){.grid{grid-template-columns:1fr}nav{margin-left:0}}
+.card h3{margin:0 0 2px;font-size:16px}
+.tag{font-size:11px;color:var(--warn);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.sub{font-size:13px;color:var(--mute);margin:0 0 10px}
+.ch{position:relative;height:290px}.ch.t{height:320px}.ch.s{height:240px}
+.note{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:14px}
+@media(max-width:600px){.note{grid-template-columns:1fr}}
+.note b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--mute);margin-bottom:2px}.note p{margin:0}
+.big{font-size:56px;font-weight:700;color:var(--acc2);line-height:1;margin:8px 0}
+.tk{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.tk li{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px}.tk b{color:var(--acc)}
+footer{margin-top:32px;font-size:12px;color:var(--mute)}
+</style></head><body><div class="wrap">
+<header><h1>Retail Analytics</h1><span class="period">Jan 2021 – Oct 2025 · Stock snapshot: 31 Oct 2025</span>
+<p>Executive view of sales, profit, products, stores and inventory performance.</p></header>
+<div class="bar">
+<label>Year (sales trend)<select id="fy"></select></label>
+<label>Category<select id="fc"></select></label>
+<button id="rs">Reset filters</button>
+<nav><a href="#summary">Summary</a><a href="#insights">Key insights</a><a href="#products">Products</a><a href="#stores">Stores</a><a href="#inventory">Inventory</a><a href="#takeaways">Takeaways</a></nav></div>
+<div class="kpis" id="kpis"></div>
+<h2 id="summary">Executive Summary</h2><div class="sum" id="sum"></div>
+<h2 id="insights">Key Business Insights</h2><div class="grid" id="g1"></div>
+<h2 id="products">Product and Sales View</h2><div class="grid" id="g2"></div>
+<h2 id="stores">Store and Location View</h2><div class="grid" id="g3"></div>
+<h2 id="inventory">Inventory View</h2><div class="grid" id="g4"></div>
+<h2 id="takeaways">Management Takeaways</h2><ul class="tk" id="tk"></ul>
+<footer>Figures are rounded. Sales and profit are shown in the currency of the source data.</footer>
+</div>
+<script>
+const MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const M=[1982,1986,829,1207,1714,1102,1592,1534,741,746,879,1009,1974,1672,746,1496,1274,1047,1551,1596,763,833,804,1148,2016,1655,997,1395,1114,1123,1400,1454,725,804,796,1098,2192,1810,1332,1198,1127,1177,1571,1554,755,804,808,1014,2020,1743,1584,741,1140,1211,1525,1575,750,771];
+const ML=M.map((_,i)=>MN[i%12]+' '+(2021+Math.floor(i/12)));
+const CAT=[['Electronics',40761,11811],['Household',8225,2382],['Personal Care',8225,2116],['Grocery',5569,1718],['Snacks',4374,1319],['Dairy',4241,1187],['Beverages',1983,523]];
+const CHAN=[['Store',30193],['Website',20313],['MobileApp',13136],['Amazon.ae',6425],['Noon',3069]];
+const CITY=[['Dubai',41004],['Abu Dhabi',20457],['Sharjah',11615]];
+const SUB=[['Batteries',3961],['Cables',3395],['Chargers',2303],['Mobile Accessories',2184],['Cleaning Supplies',895],['Paper Products',737],['Toothpaste',658],['Skincare',553],['Canned Goods',447],['Detergent',421]];
+const SN=[41,11,49,44,4,37,35,8,17,19,50,7,32,18,24,5,29,15,14,48,31,40,6,16,33,21,13,26,46,45,10,22,25,43,38,28,30,47,20,23,34,9,1,36,39,2,42,27,12,3];
+const SV=[1501,1495,1495,1490,1490,1490,1485,1485,1485,1479,1479,1479,1479,1479,1474,1474,1474,1474,1474,1469,1469,1469,1469,1469,1463,1463,1463,1463,1463,1463,1463,1458,1458,1458,1452,1452,1452,1447,1447,1447,1442,1442,1442,1436,1436,1436,1431,1431,1426,1426];
+const LP=[['Grocery · Rice · 1121',252178.55,36236.60],['Household · Paper Products · 1028',321556.41,58348.01],['Personal Care · Soap · 1156',279936.17,53765.73],['Grocery · Pasta · 1196',240533.99,56561.85],['Grocery · Canned Goods · 1029',221385.97,53295.53],['Dairy · Cream · 1015',216990.20,53024.38],['Grocery · Spices · 1128',210567.09,53687.09],['Household · Cleaning Supplies · 1179',225473.13,59049.43]];
+const TOT=73200,PROF=21056;
+const fm=k=>k>=1000?(k/1000).toFixed(1)+'M':Math.round(k)+'K';
+const $=id=>document.getElementById(id);
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const ch={};
+function mk(id,cfg){if(ch[id])ch[id].destroy();const c=css('--mute'),g=css('--line');
+ cfg.options=Object.assign({responsive:true,maintainAspectRatio:false},cfg.options||{});
+ const o=cfg.options;o.plugins=Object.assign({legend:{display:false}},o.plugins||{});
+ if(o.scales)for(const k in o.scales){o.scales[k].ticks=Object.assign({color:c},o.scales[k].ticks||{});o.scales[k].grid=Object.assign({color:g},o.scales[k].grid||{})}
+ if(o.plugins.legend.display)o.plugins.legend.labels={color:c};
+ ch[id]=new Chart($(id),cfg)}
+const card=(id,t,tag,f,m,cls,h)=>`<div class="card ${cls||''}">${tag?`<span class="tag">${tag}</span>`:''}<h3>${t}</h3><div class="ch ${h||''}"><canvas id="${id}"></canvas></div><div class="note"><div><b>Finding</b><p>${f}</p></div><div><b>Business meaning</b><p>${m}</p></div></div></div>`;
+$('g1').innerHTML=
+ card('c_tr','Sales over time','','Sales peak every January and dip around September. January 2024 was the highest month, at about 2.2M.','Ups and downs through the year are normal, so a month is best compared with the same month in earlier years.','wide','t')+
+ card('c_cat','Sales and profit by category','','Electronics made about 40.8M in sales and 11.8M in profit, far ahead of every other category.','Electronics is the biggest source of both revenue and profit. Beverages is the smallest category.')+
+ card('c_ch','Share of sales by channel','','Store is the largest channel with about 41% of sales. Website is next at 28%, then MobileApp at 18%.','Most revenue still comes through Store, while Website and MobileApp together bring in about 46%.');
+$('g2').innerHTML=
+ card('c_sub','Most profitable product types','','Batteries earned the most profit (about 4.0M), followed by Cables (3.4M) and Chargers (2.3M).','Profit is concentrated: the top four product types earn more than the next six combined.')+
+ card('c_lp','Products that sell well but earn little profit','Additional insight','8 products sell more than the typical product but earn less profit than the typical product. Rice (1121) is lowest: about 14 profit for every 100 sold.','These products bring in sales, but add less profit than their sales suggest.','','');
+$('g3').innerHTML=
+ card('c_city','Sales by city','','Dubai leads with about 41.0M in sales, ahead of Abu Dhabi (20.5M) and Sharjah (11.6M).','Dubai is the biggest market, with about 56% of sales.')+
+ card('c_st','Sales by store (all 50 stores)','','All 50 stores sell between about 1.43M and 1.50M. Store 41 is highest and Store 03 is lowest.','Store results are very even. No store is far ahead of or far behind the others.');
+$('g4').innerHTML=
+ card('c_inv','Fast-selling products with low stock','Additional insight','2,098 of 8,735 stock records (24%) are fast-selling products with lower-than-typical stock.','These are the items most at risk of running out of stock.','','s')+
+ `<div class="card"><span class="tag">Additional insight</span><h3>Items below reorder point</h3><div class="big">0</div><p class="sub">Out of 8,735 store and product stock records, as of 31 Oct 2025.</p><div class="note"><div><b>Finding</b><p>No product has fallen below its reorder point.</p></div><div><b>Business meaning</b><p>No item has reached the level that triggers a reorder yet.</p></div></div></div>`;
+$('sum').innerHTML=[
+ 'Total sales were about 73.2M and profit about 21.1M from Jan 2021 to Oct 2025.',
+ 'Electronics generated the highest sales and profit, about 56% of the total.',
+ 'Sales are highest every January and lowest around September.',
+ 'Dubai is the top city and Store is the top channel. All 50 stores perform at a similar level.',
+ '2,098 stock records are fast-selling products with low stock, but none is below its reorder point.',
+ '8 products sell well but earn low profit, led by Rice (1121).'].map(t=>`<div class="card"><p>${t}</p></div>`).join('');
+$('tk').innerHTML=[
+ '<b>Electronics drives the business.</b> It brings about 56% of sales and profit, so its results matter most.',
+ '<b>Sales follow a yearly pattern.</b> January is the peak and September a low point, which is worth keeping in mind when reading monthly results.',
+ '<b>Dubai and the Store channel lead.</b> Stores themselves are very evenly matched, so differences come from city and channel, not individual stores.',
+ '<b>Stock needs a watch.</b> Nothing is below its reorder point, but 2,098 records show fast sellers with low stock.',
+ '<b>Some sales earn little profit.</b> Eight products sell well but return less profit than their sales suggest.'].map(t=>`<li>${t}</li>`).join('');
+const yrs=['2021','2022','2023','2024','2025'];
+$('fy').innerHTML='<option value="">All years</option>'+yrs.map(y=>`<option>${y}</option>`).join('');
+$('fc').innerHTML='<option value="">All categories</option>'+CAT.map(c=>`<option>${c[0]}</option>`).join('');
+function kpis(){const c=CAT.find(x=>x[0]===$('fc').value),s=c?c[1]:TOT,p=c?c[2]:PROF;
+ const k=[[c?c[0]+' sales':'Total sales',fm(s),c?Math.round(s/CAT.reduce((a,x)=>a+x[1],0)*100)+'% of all sales':'114.07 average sale'],
+ [c?'Profit':'Total profit',fm(p),c?'':'All categories'],['Profit margin',Math.round(p/s*100)+'%','Profit as share of sales'],
+ ['Quantity sold','1.68M','All categories'],['Stores','50','Abu Dhabi, Dubai, Sharjah'],['Products (SKUs)','200','7 categories']];
+ $('kpis').innerHTML=k.map(x=>`<div class="card kpi"><div class="l">${x[0]}</div><div class="v">${x[1]}</div><div class="s">${x[2]||'&nbsp;'}</div></div>`).join('')}
+function render(){kpis();const y=$('fy').value,cs=$('fc').value,acc=css('--acc'),a2=css('--acc2'),fd=css('--fade');
+ const idx=M.map((_,i)=>i).filter(i=>!y||ML[i].endsWith(y)),v=idx.map(i=>M[i]);
+ mk('c_tr',{type:'line',data:{labels:idx.map(i=>ML[i]),datasets:[{data:v,borderColor:acc,backgroundColor:acc+'22',fill:true,tension:.25,pointRadius:3}]},
+  options:{scales:{y:{ticks:{callback:x=>fm(x)}},x:{ticks:{maxTicksLimit:12,maxRotation:0}}},plugins:{tooltip:{callbacks:{label:c=>'Sales: '+fm(c.raw)}}}}});
+ mk('c_cat',{type:'bar',data:{labels:CAT.map(c=>c[0]),datasets:[{label:'Sales',data:CAT.map(c=>c[1]),backgroundColor:CAT.map(c=>!cs||c[0]===cs?acc:fd)},{label:'Profit',data:CAT.map(c=>c[2]),backgroundColor:CAT.map(c=>!cs||c[0]===cs?a2:fd)}]},
+  options:{scales:{y:{ticks:{callback:x=>fm(x)}}},plugins:{legend:{display:true},tooltip:{callbacks:{label:c=>c.dataset.label+': '+fm(c.raw)}}}}});
+ mk('c_ch',{type:'doughnut',data:{labels:CHAN.map(c=>c[0]),datasets:[{data:CHAN.map(c=>c[1]),backgroundColor:[acc,a2,'#7aa2f7','#9fb3c8',fd],borderWidth:0}]},
+  options:{cutout:'62%',plugins:{legend:{display:true,position:'right'},tooltip:{callbacks:{label:c=>c.label+': '+fm(c.raw)+' ('+Math.round(c.raw/73136*100)+'%)'}}}}});
+ mk('c_sub',{type:'bar',data:{labels:SUB.map(s=>s[0]),datasets:[{data:SUB.map(s=>s[1]),backgroundColor:acc}]},
+  options:{indexAxis:'y',scales:{x:{ticks:{callback:x=>fm(x)}}},plugins:{tooltip:{callbacks:{label:c=>'Profit: '+fm(c.raw)}}}}});
+ mk('c_lp',{type:'bar',data:{labels:LP.map(s=>s[0]),datasets:[{label:'Sales',data:LP.map(s=>s[1]),backgroundColor:acc},{label:'Profit',data:LP.map(s=>s[2]),backgroundColor:a2}]},
+  options:{indexAxis:'y',scales:{x:{ticks:{callback:x=>fm(x/1000)}},y:{ticks:{font:{size:10}}}},plugins:{legend:{display:true},tooltip:{callbacks:{label:c=>c.dataset.label+': '+Math.round(c.raw).toLocaleString(),afterBody:i=>'Profit per 100 sold: '+(LP[i[0].dataIndex][2]/LP[i[0].dataIndex][1]*100).toFixed(1)}}}}});
+ mk('c_city',{type:'bar',data:{labels:CITY.map(c=>c[0]),datasets:[{data:CITY.map(c=>c[1]),backgroundColor:acc}]},
+  options:{scales:{y:{ticks:{callback:x=>fm(x)}}},plugins:{tooltip:{callbacks:{label:c=>'Sales: '+fm(c.raw)+' ('+Math.round(c.raw/73076*100)+'%)'}}}}});
+ mk('c_st',{type:'bar',data:{labels:SN.map(n=>'Store '+String(n).padStart(2,'0')),datasets:[{data:SV,backgroundColor:acc}]},
+  options:{scales:{y:{beginAtZero:true,ticks:{callback:x=>fm(x)}},x:{ticks:{autoSkip:true,maxTicksLimit:10,maxRotation:0}}},plugins:{tooltip:{callbacks:{label:c=>'Sales: '+(c.raw/1000).toFixed(2)+'M'}}}}});
+ mk('c_inv',{type:'doughnut',data:{labels:['Fast-selling, low stock','Other stock records'],datasets:[{data:[2098,6637],backgroundColor:[css('--warn'),fd],borderWidth:0}]},
+  options:{cutout:'62%',plugins:{legend:{display:true,position:'right'},tooltip:{callbacks:{label:c=>c.label+': '+c.raw.toLocaleString()}}}}})}
+$('fy').onchange=$('fc').onchange=render;
+$('rs').onclick=()=>{$('fy').value='';$('fc').value='';render()};
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+render();
+</script></body></html>
